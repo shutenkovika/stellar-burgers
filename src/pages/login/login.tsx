@@ -16,7 +16,6 @@ export const Login: FC = () => {
     e.preventDefault();
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then(() => navigate('/'))
       .catch(() => {}); // ошибка уже в state.user.error
   };
 

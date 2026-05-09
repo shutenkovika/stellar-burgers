@@ -26,20 +26,19 @@ export const BurgerConstructor: FC = () => {
       navigate('/login');
       return;
     }
-
     const ingredientIds = [
       constructorItems.bun._id,
       ...constructorItems.ingredients.map((i) => i._id),
       constructorItems.bun._id
     ];
-    dispatch(createOrder(ingredientIds));
+    dispatch(createOrder(ingredientIds))
+      .unwrap()
+      .then(() => dispatch(clearConstructor())); // очищаем после успешного заказа!
   };
 
   const closeOrderModal = () => {
-    dispatch(clearOrder());
-    dispatch(clearConstructor());
+    dispatch(clearOrder()); // только закрываем модалку
   };
-
   const price = useMemo(
     () =>
       (constructorItems.bun ? constructorItems.bun.price * 2 : 0) +

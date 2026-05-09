@@ -5,35 +5,26 @@ import { TIngredient } from '@utils-types';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../services/store';
-import { getOrderByNumberApi } from '../../utils/burger-api';
-import { useState } from 'react';
-import { TOrder } from '@utils-types';
+import { fetchOrderByNumber } from '../../services/slices/feedSlice';
 
 export const OrderInfo: FC = () => {
   const { number } = useParams<{ number: string }>();
-  const [orderData, setOrderData] = useState<TOrder | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
 
   const ingredients = useSelector(
     (state: RootState) => state.ingredients.ingredients
   );
 
-  // Ищем заказ сначала в ленте
-  const feedOrder = useSelector((state: RootState) =>
+  const orderData = useSelector((state: RootState) =>
     state.feed.orders.find((o) => o.number === Number(number))
   );
 
   useEffect(() => {
-    if (feedOrder) {
-      setOrderData(feedOrder);
-    } else {
-      // Если не нашли — запрашиваем по номеру
-      getOrderByNumberApi(Number(number)).then((data) => {
-        setOrderData(data.orders[0]);
-      });
+    if (!orderData) {
+      dispatch(fetchOrderByNumber(Number(number)));
     }
-  }, [number, feedOrder]);
+  }, [number, orderData, dispatch]);
 
-  /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
@@ -48,15 +39,11 @@ export const OrderInfo: FC = () => {
         if (!acc[item]) {
           const ingredient = ingredients.find((ing) => ing._id === item);
           if (ingredient) {
-            acc[item] = {
-              ...ingredient,
-              count: 1
-            };
+            acc[item] = { ...ingredient, count: 1 };
           }
         } else {
           acc[item].count++;
         }
-
         return acc;
       },
       {}
@@ -67,12 +54,7 @@ export const OrderInfo: FC = () => {
       0
     );
 
-    return {
-      ...orderData,
-      ingredientsInfo,
-      date,
-      total
-    };
+    return { ...orderData, ingredientsInfo, date, total };
   }, [orderData, ingredients]);
 
   if (!orderInfo) {
